@@ -1,8 +1,9 @@
 [image_inference]
 source_image_path = /content/FaceShifter_attack/dataset/source
 target_image_path = /content/FaceShifter_attack/dataset/target
-result_image_save_path = /content/FaceShifter_attack/result
-adv_result_image_save_path = /content/FaceShifter_attack/adv_result
+result_image_save_path = /content/FaceShifter_attack/output/result
+adv_result_image_save_path = /content/FaceShifter_attack/output/adv_result
+root_path = /content/FaceShifter_attack/output
 
 [video_inference]
 source_image_path = ./dataset/image/002.jpg

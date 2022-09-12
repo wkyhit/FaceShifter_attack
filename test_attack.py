@@ -22,6 +22,7 @@ save_path = config.get("image_inference","result_image_save_path")
 adv_save_path = config.get("image_inference","adv_result_image_save_path")
 g_weights_path = config.get("pretrained_weights","g_weights_path")
 arcface_weights_path = config.get("pretrained_weights","arcface_weights_path")
+root_path = config.get("image_inference","root_path")
 
 detector = MTCNN()
 device = torch.device('cuda')
@@ -40,6 +41,12 @@ test_transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
+
+inverse_transform = transforms.Compose([
+    transforms.Normalize(mean=[0., 0., 0.], std=[1/0.5, 1/0.5, 1/0.5]),
+    transforms.Normalize(mean=[-0.5, -0.5, -0.5], std=[1., 1., 1.]),
+])
+
 
 source_list = []
 target_list = []
@@ -111,6 +118,29 @@ for i in range(len(source_list)):
         #*********adversarial result********
         adv_Yt, _ = G(Xs_adv, embeds)
 
+        #*********保存原始Xs和adv_Xs********
+        Xs_save = inverse_transform(Xs.squeeze(0).cpu())
+        Xs_save = inverse_transform(Xs_save)
+        Xs_save = Xs_save.numpy()
+        # Xs_save = Xs_save.permute(1,2,0).numpy()
+        Xs_save = (Xs_save*255).astype(np.uint8)
+        Xs_save = cv2.cvtColor(Xs_save, cv2.COLOR_RGB2BGR)
+        cv2.imwrite("{}/origin_source/{}.jpg".format(root_path,idx), Xs_save)
+
+        adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
+        adv_Xs_save = inverse_transform(adv_Xs_save)
+        adv_Xs_save = adv_Xs_save.numpy()
+        adv_Xs_save = (adv_Xs_save*255).astype(np.uint8)
+        adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
+        cv2.imwrite("{}/adv_source/{}.jpg".format(root_path,idx), adv_Xs_save)
+
+        #*********保存target********
+        Xt_save = Xt_raw
+        Xt_save = (Xt_save*255).astype(np.uint8)
+        Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_RGB2BGR)
+        cv2.imwrite("{}/target/{}.jpg".format(root_path,idx), Xt_save)
+
+
         # save the adversarial result
         adv_Yt = adv_Yt.squeeze().detach().cpu().numpy().transpose([1, 2, 0])*0.5 + 0.5
         adv_Yt = adv_Yt[:, :, ::-1]
@@ -134,8 +164,7 @@ for i in range(len(source_list)):
         # cv2.waitKey(0)
 
 
-
-
-
+        print(' ')
+        print("processing {}/{}".format(idx, len(source_list)*len(target_list)))
         
         idx += 1
