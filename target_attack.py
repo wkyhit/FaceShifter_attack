@@ -97,8 +97,8 @@ class IFGSMAttack(object):
             # eta = torch.clamp(img_src_adv - origin_img_src, min=-self.epsilon, max=self.epsilon)#加入的噪声
             # 对batch 做 mean
             eta = torch.mean(torch.clamp(img_src_adv - origin_img_src, min=-self.epsilon, max=self.epsilon).detach_(),dim=0)#加入的噪声
-            #注意tensor取值0~1
-            X_nat = torch.clamp(origin_img_src + eta, min=0, max=1).detach_()#攻击后的img_src结果
+            #注意tensor取值-1~1
+            X_nat = torch.clamp(origin_img_src + eta, min=-1, max=1).detach_()#攻击后的img_src结果
 
             # Debug
             # X_adv, loss, grad, output_att, output_img = None, None, None, None, None

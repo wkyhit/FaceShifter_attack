@@ -39,7 +39,7 @@ arcface.load_state_dict(torch.load(arcface_weights_path, map_location=device), s
 
 test_transform = transforms.Compose([
     transforms.ToTensor(),
-    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
 inverse_transform = transforms.Compose([
@@ -114,9 +114,12 @@ for i in range(len(source_list)):
         attack = target_attack.IFGSMAttack(model=G, arcface=arcface,device=device)
         #传入img_id作为原始X, y作为目标Y，返回攻击后的adv_img_id
         Xs_adv,perturb = attack.perturb(Xs.clone().detach_(), y,Xt.clone().detach_())
+        adv_embeds = arcface(F.interpolate(Xs_adv[:, :, 19:237, 19:237], (112, 112), mode='bilinear', align_corners=True))
 
         #*********adversarial result********
-        adv_Yt, _ = G(Xs_adv, embeds)
+        adv_Yt, _ = G(Xt, adv_embeds)
+
+
 
         #*********保存原始Xs和adv_Xs********
         Xs_save = inverse_transform(Xs.squeeze(0).cpu())
@@ -139,17 +142,13 @@ for i in range(len(source_list)):
         adv_Xs_save[adv_Xs_save<0] = 0
         adv_Xs_save[adv_Xs_save>1] = 1
         adv_Xs_save = (adv_Xs_save*255).astype(np.uint8)
-        print("min(adv_Xs_save):",np.min(adv_Xs_save))
-        print("max(adv_Xs_save):",np.max(adv_Xs_save))
-        # adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
-        # adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_BGR2RGB)
+        # print("min(adv_Xs_save):",np.min(adv_Xs_save))
+        # print("max(adv_Xs_save):",np.max(adv_Xs_save))
         cv2.imwrite("{}/adv_source/{}.jpg".format(root_path,idx), adv_Xs_save)
 
         #*********保存target********
         Xt_save = Xt_raw
         Xt_save = (Xt_save*255).astype(np.uint8)
-        # Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_RGB2BGR)
-        # Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_BGR2RGB)
         cv2.imwrite("{}/target/{}.jpg".format(root_path,idx), Xt_save)
 
 
@@ -172,6 +171,7 @@ for i in range(len(source_list)):
         Yt_trans_inv = mask_*Yt_trans_inv + (1-mask_)*Xt_raw
         Yt_trans_inv = cv2.resize(Yt_trans_inv,(256,256))
         cv2.imwrite("{}/{}.jpg".format(save_path,idx),Yt_trans_inv*255)
+
         # cv2.imshow('image',Yt)
         # cv2.imwrite(save_path,Yt*255)
         # cv2.waitKey(0)
