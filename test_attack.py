@@ -120,15 +120,16 @@ for i in range(len(source_list)):
 
         #*********保存原始Xs和adv_Xs********
         Xs_save = inverse_transform(Xs.squeeze(0).cpu())
-        Xs_save = inverse_transform(Xs_save)
         Xs_save = Xs_save.numpy()
+        print("Xs_save.shape:",Xs_save.shape)
+        print("min(Xs_save):",np.min(Xs_save))
+        print("max(Xs_save):",np.max(Xs_save))
         # Xs_save = Xs_save.permute(1,2,0).numpy()
         Xs_save = (Xs_save*255).astype(np.uint8)
         Xs_save = cv2.cvtColor(Xs_save, cv2.COLOR_RGB2BGR)
         cv2.imwrite("{}/origin_source/{}.jpg".format(root_path,idx), Xs_save)
 
         adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
-        adv_Xs_save = inverse_transform(adv_Xs_save)
         adv_Xs_save = adv_Xs_save.numpy()
         adv_Xs_save = (adv_Xs_save*255).astype(np.uint8)
         adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
