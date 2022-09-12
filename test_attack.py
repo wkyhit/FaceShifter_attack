@@ -20,7 +20,7 @@ Xs_imgs_path = config.get("image_inference","source_image_path")
 Xt_imgs_path = config.get("image_inference","target_image_path")
 save_path = config.get("image_inference","result_image_save_path")
 adv_save_path = config.get("image_inference","adv_result_image_save_path")
-g_weights_path = config.get("pretrained_weights","g_latest_path")
+g_weights_path = config.get("pretrained_weights","g_weights_path")
 arcface_weights_path = config.get("pretrained_weights","arcface_weights_path")
 
 detector = MTCNN()
