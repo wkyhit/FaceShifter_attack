@@ -119,8 +119,8 @@ for i in range(len(source_list)):
         adv_Yt, _ = G(Xs_adv, embeds)
 
         #*********保存原始Xs和adv_Xs********
-        # Xs_save = inverse_transform(Xs.squeeze(0).cpu())
-        Xs_save = Xs.squeeze(0).cpu()
+        Xs_save = inverse_transform(Xs.squeeze(0).cpu())
+        # Xs_save = Xs.squeeze(0).cpu()
         Xs_save = Xs_save.numpy()
         # print("Xs_save.shape:",Xs_save.shape)
         # print("min(Xs_save):",np.min(Xs_save))
@@ -128,24 +128,28 @@ for i in range(len(source_list)):
         # Xs_save = Xs_save.permute(1,2,0).numpy()
         Xs_save = Xs_save.transpose(1,2,0)
         Xs_save = (Xs_save*255).astype(np.uint8)
-        Xs_save = cv2.cvtColor(Xs_save, cv2.COLOR_RGB2BGR)
+        # Xs_save = cv2.cvtColor(Xs_save, cv2.COLOR_RGB2BGR)
         cv2.imwrite("{}/origin_source/{}.jpg".format(root_path,idx), Xs_save)
 
-        # adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
-        adv_Xs_save = Xs_adv.squeeze(0).cpu()
+        adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
+        # adv_Xs_save = Xs_adv.squeeze(0).cpu()
         adv_Xs_save = adv_Xs_save.numpy()
         # adv_Xs_save = adv_Xs_save.permute(1,2,0).numpy()
         adv_Xs_save = adv_Xs_save.transpose(1,2,0)
+        adv_Xs_save[adv_Xs_save<0] = 0
+        adv_Xs_save[adv_Xs_save>1] = 1
         adv_Xs_save = (adv_Xs_save*255).astype(np.uint8)
+        print("min(adv_Xs_save):",np.min(adv_Xs_save))
+        print("max(adv_Xs_save):",np.max(adv_Xs_save))
         # adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
-        adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_BGR2RGB)
+        # adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_BGR2RGB)
         cv2.imwrite("{}/adv_source/{}.jpg".format(root_path,idx), adv_Xs_save)
 
         #*********保存target********
         Xt_save = Xt_raw
         Xt_save = (Xt_save*255).astype(np.uint8)
         # Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_RGB2BGR)
-        Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_BGR2RGB)
+        # Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_BGR2RGB)
         cv2.imwrite("{}/target/{}.jpg".format(root_path,idx), Xt_save)
 
 
