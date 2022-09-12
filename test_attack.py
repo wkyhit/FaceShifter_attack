@@ -39,7 +39,7 @@ arcface.load_state_dict(torch.load(arcface_weights_path, map_location=device), s
 
 test_transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
 inverse_transform = transforms.Compose([
@@ -119,28 +119,33 @@ for i in range(len(source_list)):
         adv_Yt, _ = G(Xs_adv, embeds)
 
         #*********保存原始Xs和adv_Xs********
-        Xs_save = inverse_transform(Xs.squeeze(0).cpu())
-        # Xs_save = Xs_save.numpy()
-        print("Xs_save.shape:",Xs_save.shape)
-        print("min(Xs_save):",np.min(Xs_save))
-        print("max(Xs_save):",np.max(Xs_save))
-        Xs_save = Xs_save.permute(1,2,0).numpy()
+        # Xs_save = inverse_transform(Xs.squeeze(0).cpu())
+        Xs_save = Xs.squeeze(0).cpu()
+        Xs_save = Xs_save.numpy()
+        # print("Xs_save.shape:",Xs_save.shape)
+        # print("min(Xs_save):",np.min(Xs_save))
+        # print("max(Xs_save):",np.max(Xs_save))
+        # Xs_save = Xs_save.permute(1,2,0).numpy()
+        Xs_save = Xs_save.transpose(1,2,0)
         Xs_save = (Xs_save*255).astype(np.uint8)
         Xs_save = cv2.cvtColor(Xs_save, cv2.COLOR_RGB2BGR)
         cv2.imwrite("{}/origin_source/{}.jpg".format(root_path,idx), Xs_save)
 
-        adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
-        # adv_Xs_save = adv_Xs_save.numpy()
-        adv_Xs_save = adv_Xs_save.permute(1,2,0).numpy()
+        # adv_Xs_save = inverse_transform(Xs_adv.squeeze(0).cpu())
+        adv_Xs_save = Xs_adv.squeeze(0).cpu()
+        adv_Xs_save = adv_Xs_save.numpy()
+        # adv_Xs_save = adv_Xs_save.permute(1,2,0).numpy()
+        adv_Xs_save = adv_Xs_save.transpose(1,2,0)
         adv_Xs_save = (adv_Xs_save*255).astype(np.uint8)
-        adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
+        # adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_RGB2BGR)
+        adv_Xs_save = cv2.cvtColor(adv_Xs_save, cv2.COLOR_BGR2RGB)
         cv2.imwrite("{}/adv_source/{}.jpg".format(root_path,idx), adv_Xs_save)
 
         #*********保存target********
         Xt_save = Xt_raw
-        Xt_save = Xt_save.permute(1,2,0).numpy()
         Xt_save = (Xt_save*255).astype(np.uint8)
-        Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_RGB2BGR)
+        # Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_RGB2BGR)
+        Xt_save = cv2.cvtColor(Xt_save, cv2.COLOR_BGR2RGB)
         cv2.imwrite("{}/target/{}.jpg".format(root_path,idx), Xt_save)
 
 
@@ -151,6 +156,7 @@ for i in range(len(source_list)):
         mask_ = cv2.warpAffine(mask,trans_inv, (np.size(Xt_raw, 1), np.size(Xt_raw, 0)), borderValue=(0, 0, 0))
         mask_ = np.expand_dims(mask_, 2)
         adv_Yt_trans_inv = mask_*adv_Yt_trans_inv + (1-mask_)*Xt_raw
+        adv_Yt_trans_inv = cv2.resize(adv_Yt_trans_inv,(256,256))
         cv2.imwrite("{}/{}.jpg".format(adv_save_path,idx),adv_Yt_trans_inv*255)
 
         #save the original result
@@ -160,7 +166,7 @@ for i in range(len(source_list)):
         mask_ = cv2.warpAffine(mask,trans_inv, (np.size(Xt_raw, 1), np.size(Xt_raw, 0)), borderValue=(0, 0, 0))
         mask_ = np.expand_dims(mask_, 2)
         Yt_trans_inv = mask_*Yt_trans_inv + (1-mask_)*Xt_raw
-        # Yt_trans_inv = cv2.resize(Yt_trans_inv,(512,512))
+        Yt_trans_inv = cv2.resize(Yt_trans_inv,(256,256))
         cv2.imwrite("{}/{}.jpg".format(save_path,idx),Yt_trans_inv*255)
         # cv2.imshow('image',Yt)
         # cv2.imwrite(save_path,Yt*255)
