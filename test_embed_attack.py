@@ -89,7 +89,7 @@ for i in range(len(source_list)):
     
     attack = embed_attack.IFGSMAttack(model=G, arcface=arcface,device=device)
     #传入img_id作为原始X, y作为目标Y，返回攻击后的adv_img_id
-    Xs_adv,perturb = attack.perturb(Xs.clone().detach_(), y,Xt.clone().detach_())
+    Xs_adv,perturb = attack.perturb(Xs.clone().detach_(), y)
     adv_embeds = arcface(F.interpolate(Xs_adv[:, :, 19:237, 19:237], (112, 112), mode='bilinear', align_corners=True))
 
 
@@ -119,7 +119,6 @@ for i in range(len(source_list)):
 
         #*********adversarial result********
         adv_Yt, _ = G(Xt, adv_embeds)
-
 
 
         #*********保存原始Xs和adv_Xs********
