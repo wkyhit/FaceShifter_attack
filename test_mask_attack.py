@@ -111,14 +111,14 @@ for i in range(len(source_list)):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         y = Yt.cpu().detach()
         
-        mask = abs(y-Xt.cpu().detach())
-        mask = mask.cpu().detach()
-        mask = mask[0,0,:,:]+mask[0,1,:,:]+mask[0,2,:,:]
-        mask[mask>=0.5] = 1
-        mask[mask<0.5] = 0
+        diff_mask = abs(y-Xt.cpu().detach())
+        diff_mask = diff_mask.cpu().detach()
+        diff_mask = diff_mask[0,0,:,:]+diff_mask[0,1,:,:]+diff_mask[0,2,:,:]
+        diff_mask[diff_mask>=0.5] = 1
+        diff_mask[diff_mask<0.5] = 0
 
 
-        attack = target_attack.IFGSMAttack(model=G, arcface=arcface,device=device,mask=mask)
+        attack = target_attack.IFGSMAttack(model=G, arcface=arcface,device=device,mask=diff_mask)
         #传入img_id作为原始X, y作为目标Y，返回攻击后的adv_img_id
         Xs_adv,perturb = attack.perturb(Xs.clone().detach_(), y,Xt.clone().detach_())
         adv_embeds = arcface(F.interpolate(Xs_adv[:, :, 19:237, 19:237], (112, 112), mode='bilinear', align_corners=True))
