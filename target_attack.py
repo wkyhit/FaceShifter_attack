@@ -32,6 +32,25 @@ class IFGSMAttack(object):
         #attack on specific channel?
         self.channel = False
     
+    def _batch_multiply_tensor_by_vector(self,vector, batch_tensor):
+        """Equivalent to the following
+        for ii in range(len(vector)):
+            batch_tensor.data[ii] *= vector[ii]
+        return batch_tensor
+        """
+        return (
+            batch_tensor.transpose(0, -1) * vector).transpose(0, -1).contiguous()
+
+    def batch_multiply(self,float_or_vector, tensor):
+        if isinstance(float_or_vector, torch.Tensor):
+            assert len(float_or_vector) == len(tensor)
+            tensor = self._batch_multiply_tensor_by_vector(float_or_vector, tensor)
+        elif isinstance(float_or_vector, float):
+            tensor *= float_or_vector
+        else:
+            raise TypeError("Value has to be float or torch.Tensor")
+        return tensor
+
     def perturb(self, X_nat, y,target_img):
         """
         Vanilla Attack.
@@ -70,29 +89,48 @@ class IFGSMAttack(object):
                 grad_channel_mask[:,channel_idx,:,:] = 1
                 grad_channel_mask = grad_channel_mask.to(self.device)
 
-            # Minus in the loss means "towards" and plus means "away from"
-            # use mse loss
-            loss = self.loss_fn(output, y)
+            if self.mask is not None:
+                mask = self.mask.clone().detach_()
+                mask = mask.to(self.device)
 
-            # loss = ((output - y)**2).sum() #self_defined loss
-            # loss = loss.mean()
+                loss = self.loss_fn(output*mask, y*mask) #损失函数
+            else:
 
-            #use l1 loss
-            # loss = self.loss_fn2(output, y)
+                # Minus in the loss means "towards" and plus means "away from"
+                # use mse loss
+                loss = self.loss_fn(output, y)
 
-            # nullfying attack with mse loss
-            # loss = -1*((output-origin_img_src)**2).sum()
-            # loss = -1*((output-target_img)**2).sum()
-            # loss = loss.mean()
+                # loss = ((output - y)**2).sum() #self_defined loss
+                # loss = loss.mean()
+
+                #use l1 loss
+                # loss = self.loss_fn2(output, y)
+
+                # nullfying attack with mse loss
+                # loss = -1*((output-origin_img_src)**2).sum()
+                # loss = -1*((output-target_img)**2).sum()
+                # loss = loss.mean()
 
             loss.requires_grad_(True) #!!解决无grad bug
             loss.backward()
             grad = X_nat.grad.data
 
+            #******基于 L infinity*******
+            # if self.channel:
+            #     grad = grad * grad_channel_mask
+            # img_src_adv = X_nat + self.a * torch.sign(grad)
+
+            #*****基于L2 attack*******
+            batch_size = grad.size(0)
+            p = 2 # L2
+            #防止梯度为0的情况
+            samll_constant = 1e-6 
+            norm = grad.abs().pow(p).view(batch_size, -1).sum(dim=1).pow(1. / p)
+            norm = torch.max(norm, torch.ones_like(norm)*samll_constant)
+            grad = self.batch_multiply(1./norm, grad)
             if self.channel:
                 grad = grad * grad_channel_mask
-
-            img_src_adv = X_nat + self.a * torch.sign(grad)
+            img_src_adv = X_nat + grad
 
             # eta = torch.clamp(img_src_adv - origin_img_src, min=-self.epsilon, max=self.epsilon)#加入的噪声
             # 对batch 做 mean
