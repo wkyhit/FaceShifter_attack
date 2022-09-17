@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 class IFGSMAttack(object):
-    def __init__(self, model=None, arcface=None,device=None,mask=None, epsilon=0.05, k=100, a=0.01):
+    def __init__(self, model=None, arcface=None,device=None,mask=None, epsilon=0.04, k=50, a=0.01):
         """
         FGSM, I-FGSM and PGD attacks
         epsilon: magnitude of attack
