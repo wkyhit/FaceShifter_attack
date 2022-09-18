@@ -5,6 +5,7 @@ from scipy.stats import truncnorm
 import torch.nn.functional as F
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 from torchmetrics.image.fid import FrechetInceptionDistance
+from torchmetrics import MultiScaleStructuralSimilarityIndexMeasure
 
 import torch
 import torch.nn as nn
@@ -27,6 +28,7 @@ class IFGSMAttack(object):
         self.loss_fn2 = nn.L1Loss().to(device)
         self.lpips = LearnedPerceptualImagePatchSimilarity(net_type='vgg').to("cuda")
         self.fid = FrechetInceptionDistance(feature=64).to("cuda")
+        self.ms_ssim = MultiScaleStructuralSimilarityIndexMeasure().to("cuda")
         self.device = device
         self.mask = mask
 
@@ -117,13 +119,15 @@ class IFGSMAttack(object):
                 # loss = loss.mean()
 
                 # use lpips loss: a low lpips loss means the two images are perceptual similar
-                loss = self.lpips(output, y)
+                # loss = self.lpips(output, y)
 
                 #use fid loss: a low fid loss means low quality
                 # self.fid.update(output, real=True)
                 # self.fid.update(y, real=False)
                 # loss = self.fid.compute()
 
+                #use ms_ssim loss: a hight ms_ssim loss means the two images are structure similar
+                loss = -1*self.ms_ssim(output, y)
 
             loss.requires_grad_(True) #!!解决无grad bug
             loss.backward()
