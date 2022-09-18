@@ -1,3 +1,4 @@
+import imp
 import os
 import sys
 import torch
@@ -13,6 +14,7 @@ import numpy as np
 import configparser
 
 import target_attack
+import target_diff_loss_attack
 
 config=configparser.ConfigParser()
 config.read("config.txt")
@@ -111,7 +113,9 @@ for i in range(len(source_list)):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         y = Yt.cpu().detach()
         
-        attack = target_attack.IFGSMAttack(model=G, arcface=arcface,device=device)
+        # attack = target_attack.IFGSMAttack(model=G, arcface=arcface,device=device) #1
+        attack = target_diff_loss_attack.IFGSMAttack(model=G, arcface=arcface,device=device) #2
+        
         #传入img_id作为原始X, y作为目标Y，返回攻击后的adv_img_id
         Xs_adv,perturb = attack.perturb(Xs.clone().detach_(), y,Xt.clone().detach_())
         adv_embeds = arcface(F.interpolate(Xs_adv[:, :, 19:237, 19:237], (112, 112), mode='bilinear', align_corners=True))
