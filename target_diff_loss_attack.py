@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 from torchmetrics.image.fid import FrechetInceptionDistance
 from torchmetrics import MultiScaleStructuralSimilarityIndexMeasure
+from torchmetrics import PeakSignalNoiseRatio
 
 import torch
 import torch.nn as nn
@@ -29,6 +30,7 @@ class IFGSMAttack(object):
         self.lpips = LearnedPerceptualImagePatchSimilarity(net_type='vgg').to("cuda")
         self.fid = FrechetInceptionDistance(feature=64).to("cuda")
         self.ms_ssim = MultiScaleStructuralSimilarityIndexMeasure().to("cuda")
+        self.psnr = PeakSignalNoiseRatio()
         self.device = device
         self.mask = mask
 
@@ -128,6 +130,9 @@ class IFGSMAttack(object):
 
                 #use ms_ssim loss: a hight ms_ssim loss means the two images are structure similar
                 loss = -1*self.ms_ssim(output, y)
+
+                #use psnr loss: a high psnr loss means 
+                # loss = -self.psnr(output, y)
 
             loss.requires_grad_(True) #!!解决无grad bug
             loss.backward()
